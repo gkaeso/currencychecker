@@ -11,7 +11,7 @@ import requests
 XE_URL = 'https://www.xe.com/currencyconverter/convert?Amount={amount}&From={source}&To={target}'
 
 @dataclass
-class CurrencyConverter:
+class CurrencyChecker:
     amount: float
     source: str
     target: str
@@ -21,22 +21,36 @@ class CurrencyConverter:
 
     def _fetch_conversion(self) -> str:
         """
-        This method processes the command and returns the converted amount.
-
-        It calls online and parses the conversion result.
+        This method fetches the currency conversion online and parses the result.
 
         :return: The converted amount.
         """
-        req = requests.get(XE_URL.format(amount=self.amount,source=self.source, target=self.target))
+        req = requests.get(XE_URL.format(amount=self.amount, source=self.source, target=self.target))
         req.raise_for_status()
 
         html_result = bs4.BeautifulSoup(req.text, 'html.parser').find(class_='iGrAod')
         html_result.find(class_='faded-digits').decompose()
 
-        return re.sub("[^0-9.]", "", html_result.text)
+        return re.sub(r"[^0-9.]", "", html_result.text)
+
+    def exchange_rate(self) -> str:
+        return self._exchange_rate() if self.source != self.target else str(1.00)
+
+    def _exchange_rate(self) -> str:
+        """
+        This method fetches the currency exchange rate online and parses the result.
+
+        :return: The exchange rate.
+        """
+        req = requests.get(XE_URL.format(amount=self.amount, source=self.source, target=self.target))
+        req.raise_for_status()
+
+        html_result = bs4.BeautifulSoup(req.text, 'html.parser').find(class_='dEqdnx').find('p')
+
+        return re.sub(r"[^0-9.]", "", html_result.text.split('=')[1])
 
     @staticmethod
-    def validate(val: str, cache=[]) -> str:
+    def _validate_convert(val: str, cache: list = []) -> str:
         """
         This function validates the input for currency conversion.
 
@@ -58,6 +72,24 @@ class CurrencyConverter:
 
         return val
 
+    @staticmethod
+    def _validate_exchange_rate(val: str, cache: list = []) -> str:
+        """
+        This function validates the input for currency conversion.
+
+        This function is therefore called once for each of the positional parameters.
+        Three parameters are given for currency conversion, in the following order:
+        - the currency code of the currency to convert.
+        - the currency code to convert to.
+
+        :return: The validated argument.
+        """
+        if not re.match(r"^[a-zA-Z]{3}$", val):
+            raise argparse.ArgumentError()
+        cache.append(val)
+
+        return val
+
 def get_parser() -> argparse.ArgumentParser:
     """
     This function defines the command parser.
@@ -73,9 +105,18 @@ def get_parser() -> argparse.ArgumentParser:
         '-x',
         required=False,
         metavar=('A', 'S', 'T'),
-        type=CurrencyConverter.validate,
+        type=CurrencyChecker._validate_convert,
         nargs=3,
         help='Converts the amount A from source currency S to target currency T'
+    )
+
+    parser.add_argument(
+        '-r',
+        required=False,
+        metavar=('S', 'T'),
+        type=CurrencyChecker._validate_exchange_rate,
+        nargs=2,
+        help='Checks the exchange rate from source currency S to target currency T'
     )
 
     return parser
@@ -88,11 +129,15 @@ def parse_cmd(parser: argparse.ArgumentParser) -> str:
 
     :return: The command result.
     """
-    result: str
+    result: str = ''
 
     parsed_cmd = parser.parse_args()
     if parsed_cmd.x:
-        return CurrencyConverter(*parsed_cmd.x).convert()
+        result = CurrencyChecker(*parsed_cmd.x).convert()
+    elif parsed_cmd.r:
+        result = CurrencyChecker(*['10', *parsed_cmd.r]).exchange_rate()
+
+    return result
 
 
 if __name__ == '__main__':

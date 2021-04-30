@@ -1,7 +1,16 @@
 #!/usr/bin/env python
 
 import argparse
+import re
 
+
+def _validate_currency(curr: str) -> None:
+    format_regex = re.compile(r"^[a-zA-Z]{3}$")
+
+    if not format_regex.match(curr):
+        raise argparse.ArgumentError()
+
+    return
 
 def get_parser() -> argparse.ArgumentParser:
     """
@@ -18,7 +27,7 @@ def get_parser() -> argparse.ArgumentParser:
         '-s', '--source',
         required=False,
         metavar='S',
-        type=str,
+        type=_validate_currency,
         help='The currency to convert'
     )
 
@@ -26,7 +35,7 @@ def get_parser() -> argparse.ArgumentParser:
         '-t', '--target',
         required=False,
         metavar='T',
-        type=str,
+        type=_validate_currency,
         help='The currency needed'
     )
 

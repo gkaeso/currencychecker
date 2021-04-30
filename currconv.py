@@ -4,13 +4,13 @@ import argparse
 import re
 
 
-def _validate_currency(curr: str) -> None:
+def _validate_currency(curr: str) -> str:
     format_regex = re.compile(r"^[a-zA-Z]{3}$")
 
     if not format_regex.match(curr):
         raise argparse.ArgumentError()
 
-    return
+    return curr
 
 def get_parser() -> argparse.ArgumentParser:
     """

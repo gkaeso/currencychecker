@@ -26,6 +26,7 @@ def get_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         '-s', '--source',
         required=False,
+        default='USD',
         metavar='S',
         type=_validate_currency,
         help='The currency to convert'
@@ -34,6 +35,7 @@ def get_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         '-t', '--target',
         required=False,
+        default='USD',
         metavar='T',
         type=_validate_currency,
         help='The currency needed'

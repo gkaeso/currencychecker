@@ -3,6 +3,9 @@
 import argparse
 import re
 
+import bs4
+import requests
+
 
 def _validate_currency(curr: str) -> str:
     format_regex = re.compile(r"^[a-zA-Z]{3}$")
@@ -50,20 +53,42 @@ def get_parser() -> argparse.ArgumentParser:
 
     return parser
 
-def parse_cmd(parser: argparse.ArgumentParser) -> None:
+def _fetch_conversion(amount: float, source: str, target: str) -> float:
+    """
+    This function processes the command and returns the converted amount.
+
+    It calls online and parses the conversion result.
+
+    :return: The converted amount.
+    """
+    req = requests.get(f'https://www.xe.com/currencyconverter/convert?Amount={amount}&From={source}&To={target}')
+    req.raise_for_status()
+
+    html_result = bs4.BeautifulSoup(req.text, 'html.parser').find(class_='iGrAod')
+    html_result.find(class_='faded-digits').decompose()
+
+    return float(re.sub("[^0-9.]", "", html_result.text))
+
+def parse_cmd(parser: argparse.ArgumentParser) -> float:
     """
     This function parses the command.
 
-    :return: None
+    :return: The converted amount.
     """
+    amount: float
+
     parsed_cmd = parser.parse_args()
 
-    print(f'source={parsed_cmd.source}, target={parsed_cmd.target}, amount={parsed_cmd.amount}')
+    if parsed_cmd.source != parsed_cmd.target:
+        amount = _fetch_conversion(parsed_cmd.amount, parsed_cmd.source, parsed_cmd.target)
+    else:
+        amount = float(parsed_cmd.amount)
 
-    return
+    return amount
 
 
 if __name__ == '__main__':
 
     parser = get_parser()
-    parse_cmd(parser)
+    print(parse_cmd(parser))
+

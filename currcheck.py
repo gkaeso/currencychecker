@@ -7,8 +7,7 @@ from dataclasses import dataclass
 import bs4
 import requests
 
-
-XE_URL = 'https://www.xe.com/currencyconverter/convert?Amount={amount}&From={source}&To={target}'
+from resources import XE_URL, CONVERSION_VERBOSE, RATE_VERBOSE
 
 @dataclass
 class CurrencyChecker:
@@ -144,10 +143,21 @@ def parse_cmd(parser: argparse.ArgumentParser) -> str:
     parsed_cmd = parser.parse_args()
     if parsed_cmd.x:
         result = CurrencyChecker(*parsed_cmd.x).convert()
-        if parsed_cmd.v: result += f' {parsed_cmd.x[2]}'
+        if parsed_cmd.v:
+            result = CONVERSION_VERBOSE.format(
+                amount=parsed_cmd.x[0],
+                source=parsed_cmd.x[1],
+                target=parsed_cmd.x[2],
+                result=result
+            )
     elif parsed_cmd.r:
         result = CurrencyChecker(*['10', *parsed_cmd.r]).exchange_rate()
-        if parsed_cmd.v: result = f'1 {parsed_cmd.r[0]} = {result} {parsed_cmd.r[1]}'
+        if parsed_cmd.v:
+            result = RATE_VERBOSE.format(
+                source=parsed_cmd.r[0],
+                target=parsed_cmd.r[1],
+                result=result
+            )
     else:
         parser.error('Missing valid argument')
 

@@ -125,7 +125,7 @@ def get_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         '-v',
         required=False,
-        help='For detailed output',
+        help='Adds output verbosity',
         action='store_true'
     )
 
@@ -148,6 +148,8 @@ def parse_cmd(parser: argparse.ArgumentParser) -> str:
     elif parsed_cmd.r:
         result = CurrencyChecker(*['10', *parsed_cmd.r]).exchange_rate()
         if parsed_cmd.v: result = f'1 {parsed_cmd.r[0]} = {result} {parsed_cmd.r[1]}'
+    else:
+        parser.error('Missing valid argument')
 
     return result
 

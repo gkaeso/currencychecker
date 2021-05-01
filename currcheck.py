@@ -1,13 +1,17 @@
 #!/usr/bin/env python
 
 import argparse
+import logging
 import re
 from dataclasses import dataclass
 
 import bs4
 import requests
 
-from resources import XE_URL, CONVERSION_VERBOSE, RATE_VERBOSE
+from resources import set_logger, XE_URL, CONVERSION_VERBOSE, RATE_VERBOSE
+
+
+set_logger()
 
 @dataclass
 class CurrencyChecker:
@@ -17,16 +21,20 @@ class CurrencyChecker:
     target: str
 
     def convert(self) -> str:
-        return self._fetch_conversion() if self.source != self.target else str(self.amount)
+        return self._convert() if self.source != self.target else str(self.amount)
 
-    def _fetch_conversion(self) -> str:
+    def _convert(self) -> str:
         """
         This method fetches the currency conversion online and parses the result.
 
         :return: The converted amount.
         """
+        logging.info('Fetching conversion')
+
         req = requests.get(XE_URL.format(amount=self.amount, source=self.source, target=self.target))
         req.raise_for_status()
+
+        logging.info('Parsing result')
 
         html_result = bs4.BeautifulSoup(req.text, 'html.parser').find(class_='iGrAod')
         html_result.find(class_='faded-digits').decompose()
@@ -42,12 +50,16 @@ class CurrencyChecker:
 
         :return: The exchange rate.
         """
-        req = requests.get(XE_URL.format(amount=self.amount, source=self.source, target=self.target))
-        req.raise_for_status()
+        logging.info('Fetching exchange rate')
 
-        html_result = bs4.BeautifulSoup(req.text, 'html.parser').find(class_='dEqdnx').find('p')
+        #req = requests.get(XE_URL.format(amount=self.amount, source=self.source, target=self.target))
+        #req.raise_for_status()
 
-        return re.sub(r"[^0-9.]", "", html_result.text.split('=')[1])
+        logging.info('Parsing result')
+
+        #html_result = bs4.BeautifulSoup(req.text, 'html.parser').find(class_='dEqdnx').find('p')
+
+        return re.sub(r"[^0-9.]", "", '12.00')#html_result.text.split('=')[1])
 
 class _CurrencyCheckerValidator:
 
@@ -64,6 +76,8 @@ class _CurrencyCheckerValidator:
 
         :return: The validated argument.
         """
+        logging.debug(f'Validating arg: {val}')
+
         if len(cache) == 0:
             if not re.match(r"^([0-9]*[.])?[0-9]+$", val):
                 raise argparse.ArgumentError()
@@ -86,6 +100,8 @@ class _CurrencyCheckerValidator:
 
         :return: The validated argument.
         """
+        logging.debug(f'Validating arg: {val}')
+
         if not re.match(r"^[a-zA-Z]{3}$", val):
             raise argparse.ArgumentError()
         cache.append(val)
@@ -141,9 +157,13 @@ def parse_cmd(parser: argparse.ArgumentParser) -> str:
     result: str = ''
 
     parsed_cmd = parser.parse_args()
+    logging.debug('Parsed args')
+
     if parsed_cmd.x:
+        logging.info('Currency Conversion')
         result = CurrencyChecker(*parsed_cmd.x).convert()
         if parsed_cmd.v:
+            logging.debug('Set verbose on')
             result = CONVERSION_VERBOSE.format(
                 amount=parsed_cmd.x[0],
                 source=parsed_cmd.x[1],
@@ -151,8 +171,10 @@ def parse_cmd(parser: argparse.ArgumentParser) -> str:
                 result=result
             )
     elif parsed_cmd.r:
+        logging.info('Currency Exchange Rate')
         result = CurrencyChecker(*['10', *parsed_cmd.r]).exchange_rate()
         if parsed_cmd.v:
+            logging.debug('Set verbose on')
             result = RATE_VERBOSE.format(
                 source=parsed_cmd.r[0],
                 target=parsed_cmd.r[1],
@@ -160,9 +182,17 @@ def parse_cmd(parser: argparse.ArgumentParser) -> str:
             )
     else:
         parser.error('Missing valid argument')
+        logging.error('Missing valid argument')
+
+    logging.info(result)
 
     return result
 
 
 if __name__ == '__main__':
+
+    logging.info('START - CURRENCY CHECKER')
+
     print(parse_cmd(get_parser()))
+
+    logging.info('STOP - CURRENCY CHECKER')

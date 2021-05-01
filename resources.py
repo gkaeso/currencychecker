@@ -63,8 +63,8 @@ Currency Checker
 ----------------
 ISO 4217
 --
-Currency: EUR
+ISO: {source}
 --
-Result: CURRENCY=EUR, CODE=EUR, NUM=978 ; 
+Result: CODE={code}, NUM={num} ; 
 ----------------
 '''

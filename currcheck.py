@@ -19,11 +19,13 @@ class CurrencyChecker:
     amount: float
     source: str
     target: str
+    is_verbose: bool
 
-    def __init__(self, source):
+    def __init__(self, source, is_verbose):
         self.amount = 0
         self.source = source
         self.target = ''
+        self.is_verbose = is_verbose
 
     def convert(self) -> str:
         return self._convert() if self.source != self.target else str(self.amount)
@@ -98,7 +100,11 @@ class CurrencyChecker:
             logging.error(f'Currency code {self.source} is invalid')
             raise ValueError(f'Currency code {self.source} is invalid')
 
-        result = '{},{}'.format(iso_xml.find('Ccy').text, iso_xml.find('CcyNbr').text)
+        iso_code, iso_num = iso_xml.find('Ccy').text, iso_xml.find('CcyNbr').text
+        if self.is_verbose:
+            result = ISO_VERBOSE.format(source=self.source, code=iso_code, num=iso_num)
+        else:
+            result = '{},{}'.format(iso_code, iso_num)
 
         return result
 
@@ -251,7 +257,7 @@ def parse_cmd(parser: argparse.ArgumentParser) -> str:
             )
     elif parsed_cmd.i:
         logging.info('ISO Search')
-        result = CurrencyChecker(*parsed_cmd.i).iso()
+        result = CurrencyChecker(*parsed_cmd.i, bool(parsed_cmd.v)).iso()
     else:
         parser.error('Missing valid argument')
         logging.error('Missing valid argument')

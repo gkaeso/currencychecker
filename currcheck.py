@@ -12,6 +12,7 @@ XE_URL = 'https://www.xe.com/currencyconverter/convert?Amount={amount}&From={sou
 
 @dataclass
 class CurrencyChecker:
+
     amount: float
     source: str
     target: str
@@ -49,8 +50,10 @@ class CurrencyChecker:
 
         return re.sub(r"[^0-9.]", "", html_result.text.split('=')[1])
 
+class _CurrencyCheckerValidator:
+
     @staticmethod
-    def _validate_convert(val: str, cache: list = []) -> str:
+    def validate_convert(val: str, cache: list = []) -> str:
         """
         This function validates the input for currency conversion.
 
@@ -73,7 +76,7 @@ class CurrencyChecker:
         return val
 
     @staticmethod
-    def _validate_exchange_rate(val: str, cache: list = []) -> str:
+    def validate_exchange_rate(val: str, cache: list = []) -> str:
         """
         This function validates the input for currency conversion.
 
@@ -105,7 +108,7 @@ def get_parser() -> argparse.ArgumentParser:
         '-x',
         required=False,
         metavar=('A', 'S', 'T'),
-        type=CurrencyChecker._validate_convert,
+        type=_CurrencyCheckerValidator.validate_convert,
         nargs=3,
         help='Converts the amount A from source currency S to target currency T'
     )
@@ -114,7 +117,7 @@ def get_parser() -> argparse.ArgumentParser:
         '-r',
         required=False,
         metavar=('S', 'T'),
-        type=CurrencyChecker._validate_exchange_rate,
+        type=_CurrencyCheckerValidator.validate_exchange_rate,
         nargs=2,
         help='Checks the exchange rate from source currency S to target currency T'
     )

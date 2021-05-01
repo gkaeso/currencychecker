@@ -122,6 +122,13 @@ def get_parser() -> argparse.ArgumentParser:
         help='Checks the exchange rate from source currency S to target currency T'
     )
 
+    parser.add_argument(
+        '-v',
+        required=False,
+        help='For detailed output',
+        action='store_true'
+    )
+
     return parser
 
 def parse_cmd(parser: argparse.ArgumentParser) -> str:
@@ -137,8 +144,10 @@ def parse_cmd(parser: argparse.ArgumentParser) -> str:
     parsed_cmd = parser.parse_args()
     if parsed_cmd.x:
         result = CurrencyChecker(*parsed_cmd.x).convert()
+        if parsed_cmd.v: result += f' {parsed_cmd.x[2]}'
     elif parsed_cmd.r:
         result = CurrencyChecker(*['10', *parsed_cmd.r]).exchange_rate()
+        if parsed_cmd.v: result = f'1 {parsed_cmd.r[0]} = {result} {parsed_cmd.r[1]}'
 
     return result
 

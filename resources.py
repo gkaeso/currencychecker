@@ -54,3 +54,17 @@ To:     {target}
 Result: 1 {source} = {result} {target}
 ----------------
 '''
+
+ISO_URL = 'https://www.currency-iso.org/dam/downloads/lists/list_one.xml'
+
+ISO_VERBOSE = '''
+----------------
+Currency Checker
+----------------
+ISO 4217
+--
+Currency: EUR
+--
+Result: CURRENCY=EUR, CODE=EUR, NUM=978 ; 
+----------------
+'''

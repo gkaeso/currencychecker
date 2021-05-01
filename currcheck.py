@@ -97,7 +97,7 @@ def get_parser() -> argparse.ArgumentParser:
     :return: The parser.
     """
     parser = argparse.ArgumentParser(
-        prog='currconv',
+        prog='currencychecker',
         description='Currency Checker'
     )
 

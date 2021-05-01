@@ -21,12 +21,6 @@ class CurrencyChecker:
     target: str
     is_verbose: bool
 
-    def __init__(self, source, is_verbose):
-        self.amount = 0
-        self.source = source
-        self.target = ''
-        self.is_verbose = is_verbose
-
     def convert(self) -> str:
         return self._convert() if self.source != self.target else str(self.amount)
 
@@ -36,6 +30,8 @@ class CurrencyChecker:
 
         :return: The converted amount.
         """
+        result: str
+
         logging.info('Fetching conversion')
 
         req = requests.get(XE_URL.format(amount=self.amount, source=self.source, target=self.target))
@@ -46,7 +42,19 @@ class CurrencyChecker:
         html_result = bs4.BeautifulSoup(req.text, 'html.parser').find(class_='iGrAod')
         html_result.find(class_='faded-digits').decompose()
 
-        return re.sub(r"[^0-9.]", "", html_result.text)
+        conv_value = re.sub(r"[^0-9.]", "", html_result.text)
+        if self.is_verbose:
+            logging.debug('Set verbose on')
+            result = CONVERSION_VERBOSE.format(
+                amount=self.amount,
+                source=self.source,
+                target=self.target,
+                result=conv_value
+            )
+        else:
+            result = conv_value
+
+        return result
 
     def exchange_rate(self) -> str:
         return self._exchange_rate() if self.source != self.target else str(1.00)
@@ -57,6 +65,8 @@ class CurrencyChecker:
 
         :return: The exchange rate.
         """
+        result: str
+
         logging.info('Fetching exchange rate')
 
         req = requests.get(XE_URL.format(amount=self.amount, source=self.source, target=self.target))
@@ -65,8 +75,15 @@ class CurrencyChecker:
         logging.info('Parsing result')
 
         html_result = bs4.BeautifulSoup(req.text, 'html.parser').find(class_='dEqdnx').find('p')
+        rate = re.sub(r"[^0-9.]", "", html_result.text.split('=')[1])
 
-        return re.sub(r"[^0-9.]", "", html_result.text.split('=')[1])
+        if self.is_verbose:
+            logging.debug('Set verbose on')
+            result = RATE_VERBOSE.format(source=self.source, target=self.target, result=rate)
+        else:
+            result = rate
+
+        return result
 
     def iso(self) -> str:
         return self._iso(self.source.isdigit())
@@ -102,6 +119,7 @@ class CurrencyChecker:
 
         iso_code, iso_num = iso_xml.find('Ccy').text, iso_xml.find('CcyNbr').text
         if self.is_verbose:
+            logging.debug('Set verbose on')
             result = ISO_VERBOSE.format(source=self.source, code=iso_code, num=iso_num)
         else:
             result = '{},{}'.format(iso_code, iso_num)
@@ -236,28 +254,13 @@ def parse_cmd(parser: argparse.ArgumentParser) -> str:
 
     if parsed_cmd.x:
         logging.info('Currency Conversion')
-        result = CurrencyChecker(*parsed_cmd.x).convert()
-        if parsed_cmd.v:
-            logging.debug('Set verbose on')
-            result = CONVERSION_VERBOSE.format(
-                amount=parsed_cmd.x[0],
-                source=parsed_cmd.x[1],
-                target=parsed_cmd.x[2],
-                result=result
-            )
+        result = CurrencyChecker(*[*parsed_cmd.x, bool(parsed_cmd.v)]).convert()
     elif parsed_cmd.r:
         logging.info('Currency Exchange Rate')
-        result = CurrencyChecker(*[10, *parsed_cmd.r]).exchange_rate()
-        if parsed_cmd.v:
-            logging.debug('Set verbose on')
-            result = RATE_VERBOSE.format(
-                source=parsed_cmd.r[0],
-                target=parsed_cmd.r[1],
-                result=result
-            )
+        result = CurrencyChecker(*[10, *parsed_cmd.r, bool(parsed_cmd.v)]).exchange_rate()
     elif parsed_cmd.i:
         logging.info('ISO Search')
-        result = CurrencyChecker(*parsed_cmd.i, bool(parsed_cmd.v)).iso()
+        result = CurrencyChecker(*[0, *parsed_cmd.i, '', bool(parsed_cmd.v)]).iso()
     else:
         parser.error('Missing valid argument')
         logging.error('Missing valid argument')

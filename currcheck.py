@@ -22,7 +22,13 @@ class CurrencyChecker:
     is_verbose: bool
 
     def convert(self) -> str:
-        return self._convert() if self.source != self.target else str(self.amount)
+        converted_amount: str = self._convert()
+        return converted_amount if not self.is_verbose else CONVERSION_VERBOSE.format(
+            amount=self.amount,
+            source=self.source,
+            target=self.target,
+            result=converted_amount
+        )
 
     def _convert(self) -> str:
         """
@@ -34,30 +40,28 @@ class CurrencyChecker:
 
         logging.info('Fetching conversion')
 
-        req = requests.get(XE_URL.format(amount=self.amount, source=self.source, target=self.target))
-        req.raise_for_status()
-
-        logging.info('Parsing result')
-
-        html_result = bs4.BeautifulSoup(req.text, 'html.parser').find(class_='iGrAod')
-        html_result.find(class_='faded-digits').decompose()
-
-        conv_value = re.sub(r"[^0-9.]", "", html_result.text)
-        if self.is_verbose:
-            logging.debug('Set verbose on')
-            result = CONVERSION_VERBOSE.format(
-                amount=self.amount,
-                source=self.source,
-                target=self.target,
-                result=conv_value
-            )
+        if self.source == self.target:
+            result = str(self.amount)
         else:
-            result = conv_value
+            req = requests.get(XE_URL.format(amount=self.amount, source=self.source, target=self.target))
+            req.raise_for_status()
+
+            logging.info('Parsing result')
+
+            html_result = bs4.BeautifulSoup(req.text, 'html.parser').find(class_='iGrAod')
+            html_result.find(class_='faded-digits').decompose()
+
+            result = re.sub(r"[^0-9.]", "", html_result.text)
 
         return result
 
     def exchange_rate(self) -> str:
-        return self._exchange_rate() if self.source != self.target else str(1.00)
+        exchange_rate: str = self._exchange_rate()
+        return exchange_rate if not self.is_verbose else RATE_VERBOSE.format(
+            source=self.source,
+            target=self.target,
+            result=exchange_rate
+        )
 
     def _exchange_rate(self) -> str:
         """
@@ -74,21 +78,23 @@ class CurrencyChecker:
 
         logging.info('Parsing result')
 
-        html_result = bs4.BeautifulSoup(req.text, 'html.parser').find(class_='dEqdnx').find('p')
-        rate = re.sub(r"[^0-9.]", "", html_result.text.split('=')[1])
-
-        if self.is_verbose:
-            logging.debug('Set verbose on')
-            result = RATE_VERBOSE.format(source=self.source, target=self.target, result=rate)
+        if self.source == self.target:
+            result = str(1.00)
         else:
-            result = rate
+            html_result = bs4.BeautifulSoup(req.text, 'html.parser').find(class_='dEqdnx').find('p')
+            result = re.sub(r"[^0-9.]", "", html_result.text.split('=')[1])
 
         return result
 
     def iso(self) -> str:
-        return self._iso(self.source.isdigit())
+        iso_code, iso_num = self._iso(self.source.isdigit())
+        return '{},{}'.format(iso_code, iso_num) if not self.is_verbose else ISO_VERBOSE.format(
+            source=self.source,
+            code=iso_code,
+            num=iso_num
+        )
 
-    def _iso(self, is_digit: bool) -> str:
+    def _iso(self, is_digit: bool) -> tuple[str, str]:
         """
         This method fetches the ISO 4217 details of a currency.
 
@@ -117,14 +123,7 @@ class CurrencyChecker:
             logging.error(f'Currency code {self.source} is invalid')
             raise ValueError(f'Currency code {self.source} is invalid')
 
-        iso_code, iso_num = iso_xml.find('Ccy').text, iso_xml.find('CcyNbr').text
-        if self.is_verbose:
-            logging.debug('Set verbose on')
-            result = ISO_VERBOSE.format(source=self.source, code=iso_code, num=iso_num)
-        else:
-            result = '{},{}'.format(iso_code, iso_num)
-
-        return result
+        return iso_xml.find('Ccy').text, iso_xml.find('CcyNbr').text
 
 class _CurrencyCheckerValidator:
 
@@ -169,7 +168,6 @@ class _CurrencyCheckerValidator:
 
         if not re.match(r"^[a-zA-Z]{3}$", val):
             raise argparse.ArgumentError()
-        cache.append(val)
 
         return val
 

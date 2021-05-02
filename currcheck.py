@@ -154,7 +154,7 @@ class _CurrencyCheckerValidator:
         return val
 
     @staticmethod
-    def validate_exchange_rate(val: str, cache: list = []) -> str:
+    def validate_exchange_rate(val: str) -> str:
         """
         This function validates the input for currency exchange rate.
 

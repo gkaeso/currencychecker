@@ -48,7 +48,7 @@ class CurrencyChecker:
             except requests.exceptions.HTTPError as errh:
                 logging.error(errh)
                 logging.error(f'At least one currency code is invalid: {self.source} or {self.target}')
-                raise SystemExit(f'ERROR - At least one currency code is invalid: {self.source} or {self.target}')
+                raise ValueError(f'ERROR - At least one currency code is invalid: {self.source} or {self.target}')
             except Exception:
                 raise
 
@@ -68,7 +68,7 @@ class CurrencyChecker:
         except requests.exceptions.HTTPError as errh:
             logging.error(errh)
             logging.error(f'At least one currency code is invalid: {self.source} or {self.target}')
-            raise SystemExit(f'ERROR - At least one currency code is invalid: {self.source} or {self.target}')
+            raise ValueError(f'ERROR - At least one currency code is invalid: {self.source} or {self.target}')
         except Exception:
             raise
 
@@ -105,7 +105,7 @@ class CurrencyChecker:
         except AttributeError as erra:
             logging.error(erra)
             logging.error(f'Currency code is invalid: {self.source}')
-            raise SystemExit(f'ERROR - Currency code is invalid: {self.source}')
+            raise ValueError(f'ERROR - Currency code is invalid: {self.source}')
         except Exception:
             raise
 
@@ -289,6 +289,9 @@ if __name__ == '__main__':
 
     logging.info('START - CURRENCY CHECKER')
 
-    print(parse_cmd(get_parser()))
+    try:
+        print(parse_cmd(get_parser()))
+    except Exception as err:
+        raise SystemExit(err)
 
     logging.info('STOP - CURRENCY CHECKER')

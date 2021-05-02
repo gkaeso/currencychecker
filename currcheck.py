@@ -161,10 +161,10 @@ class _CurrencyCheckerValidator:
 
         if len(cache) == 0:
             if not re.match(r"^([0-9]*[.])?[0-9]+$", val):
-                raise argparse.ArgumentError()
+                raise argparse.ArgumentError(None, 'Invalid input argument')
         else:
             if not re.match(r"^[a-zA-Z]{3}$", val):
-                raise argparse.ArgumentError()
+                raise argparse.ArgumentError(None, 'Invalid input argument')
         cache.append(val)
 
         return val
@@ -184,7 +184,7 @@ class _CurrencyCheckerValidator:
         logging.debug(f'Validating arg: {val}')
 
         if not re.match(r"^[a-zA-Z]{3}$", val):
-            raise argparse.ArgumentError()
+            raise argparse.ArgumentError(None, 'Invalid input argument')
 
         return val
 
@@ -203,7 +203,7 @@ class _CurrencyCheckerValidator:
         logging.debug(f'Validating arg: {val}')
 
         if not re.match(r"^[a-zA-Z]{3}$", val) and not re.match(r"^[0-9]{3}$", val):
-            raise argparse.ArgumentError()
+            raise argparse.ArgumentError(None, 'Invalid input argument')
 
         return val
 

@@ -71,16 +71,14 @@ class CurrencyChecker:
         """
         result: str
 
-        logging.info('Fetching exchange rate')
-
-        req = requests.get(XE_URL.format(amount=self.amount, source=self.source, target=self.target))
-        req.raise_for_status()
-
-        logging.info('Parsing result')
-
         if self.source == self.target:
             result = str(1.00)
         else:
+            logging.info('Fetching exchange rate')
+            req = requests.get(XE_URL.format(amount=self.amount, source=self.source, target=self.target))
+            req.raise_for_status()
+
+            logging.info('Parsing result')
             html_result = bs4.BeautifulSoup(req.text, 'html.parser').find(class_='dEqdnx').find('p')
             result = re.sub(r"[^0-9.]", "", html_result.text.split('=')[1])
 

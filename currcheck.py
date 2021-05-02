@@ -36,31 +36,46 @@ class CurrencyChecker:
 
         :return: The converted amount.
         """
-        result: str
-
-        logging.info('Fetching conversion')
+        converted_amount: str
 
         if self.source == self.target:
-            result = str(self.amount)
+            converted_amount = str(self.amount)
         else:
-            req = requests.get(XE_URL.format(amount=self.amount, source=self.source, target=self.target))
-            req.raise_for_status()
+            try:
+                logging.info('Fetching conversion')
+                req = requests.get(XE_URL.format(amount=self.amount, source=self.source, target=self.target))
+                req.raise_for_status()
+            except requests.exceptions.HTTPError as errh:
+                logging.error(errh)
+                logging.error(f'At least one currency code is invalid: {self.source} or {self.target}')
+                raise SystemExit(f'ERROR - At least one currency code is invalid: {self.source} or {self.target}')
+            except Exception:
+                raise
 
             logging.info('Parsing result')
-
             html_result = bs4.BeautifulSoup(req.text, 'html.parser').find(class_='iGrAod')
             html_result.find(class_='faded-digits').decompose()
 
-            result = re.sub(r"[^0-9.]", "", html_result.text)
+            converted_amount = re.sub(r"[^0-9.]", "", html_result.text)
 
-        return result
+        return converted_amount
 
     def exchange_rate(self) -> str:
-        exchange_rate: str = self._exchange_rate()
-        return exchange_rate if not self.is_verbose else RATE_VERBOSE.format(
+        rate: str
+
+        try:
+            rate = self._exchange_rate()
+        except requests.exceptions.HTTPError as errh:
+            logging.error(errh)
+            logging.error(f'At least one currency code is invalid: {self.source} or {self.target}')
+            raise SystemExit(f'ERROR - At least one currency code is invalid: {self.source} or {self.target}')
+        except Exception:
+            raise
+
+        return rate if not self.is_verbose else RATE_VERBOSE.format(
             source=self.source,
             target=self.target,
-            result=exchange_rate
+            result=rate
         )
 
     def _exchange_rate(self) -> str:
@@ -85,7 +100,15 @@ class CurrencyChecker:
         return result
 
     def iso(self) -> str:
-        iso_code, iso_num = self._iso(self.source.isdigit())
+        try:
+            iso_code, iso_num =  self._iso(self.source.isdigit())
+        except AttributeError as erra:
+            logging.error(erra)
+            logging.error(f'Currency code is invalid: {self.source}')
+            raise SystemExit(f'ERROR - Currency code is invalid: {self.source}')
+        except Exception:
+            raise
+
         return '{},{}'.format(iso_code, iso_num) if not self.is_verbose else ISO_VERBOSE.format(
             source=self.source,
             code=iso_code,
@@ -111,15 +134,11 @@ class CurrencyChecker:
         logging.info('Parsing result')
 
         root_xml = bs4.BeautifulSoup(req.text, 'xml')
-        iso_xml: bs4.element.Tag
-        try:
-            if is_digit:
-                iso_xml = root_xml.find('CcyNbr', text=self.source).parent
-            else:
-                iso_xml = root_xml.find('Ccy', text=self.source).parent
-        except AttributeError as e:
-            logging.error(f'Currency code {self.source} is invalid')
-            raise ValueError(f'Currency code {self.source} is invalid')
+        iso_xml: bs4.element.Ta
+        if is_digit:
+            iso_xml = root_xml.find('CcyNbr', text=self.source).parent
+        else:
+            iso_xml = root_xml.find('Ccy', text=self.source).parent
 
         return iso_xml.find('Ccy').text, iso_xml.find('CcyNbr').text
 

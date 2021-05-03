@@ -93,3 +93,32 @@ class TestCurrencyCheckerValidator(unittest.TestCase):
 
     def test_iso_valid_num(self):
         self.assertEqual(_CurrencyCheckerValidator.validate_iso(self.valid_num), self.valid_num)
+
+
+class TestCurrencyChecker(unittest.TestCase):
+
+    @classmethod
+    def setUpClass(cls) -> None:
+        cls.invalid_code = 'ERR'    # this currency does not exist
+        cls.valid_code = 'EUR'
+        cls.valid_amount = 1.00
+
+    def test_convert_invalid_code_currency1(self):
+        with self.assertRaises(ValueError):
+            CurrencyChecker(self.valid_amount, self.invalid_code, self.valid_code, False).convert()
+
+    def test_convert_invalid_code_currency2(self):
+        with self.assertRaises(ValueError):
+            CurrencyChecker(self.valid_amount, self.valid_code, self.invalid_code, False).convert()
+
+    def test_rate_invalid_code_currency1(self):
+        with self.assertRaises(ValueError):
+            CurrencyChecker(self.valid_amount, self.invalid_code, self.valid_code, False).exchange_rate()
+
+    def test_rate_invalid_code_currency2(self):
+        with self.assertRaises(ValueError):
+            CurrencyChecker(self.valid_amount, self.valid_code, self.invalid_code, False).exchange_rate()
+
+    def test_iso_invalid_code(self):
+        with self.assertRaises(ValueError):
+            CurrencyChecker(self.valid_amount, self.invalid_code, self.valid_code, False).iso()

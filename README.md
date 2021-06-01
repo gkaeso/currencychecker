@@ -95,4 +95,9 @@ _N.B._ Requests made by this program are mostly quick.
 However, the target websites called in the program sometimes slow HTTP 
 requests down on purpose if too many are made. 
 This program does not mimic any browser user agent.
-    
+
+_______________
+
+## License
+
+This repository uses the [MIT License](/LICENSE).

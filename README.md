@@ -89,6 +89,8 @@ Web-scraping implemented using libraries:
 - **beautifulsoup4**, for HTML parsing
 - **lxml**, (via beautifulsoup4) for XML parsing
 
+Unit testing made with **unittest**.
+
 _N.B._ Requests made by this program are mostly quick. 
 However, the target websites called in the program sometimes slow HTTP 
 requests down on purpose if too many are made. 

@@ -1,10 +1,18 @@
 CURRENCY CHECKER
 ----------------
 
-A python program to check various details on currencies woldwide.
+A python program checking various details on currencies worldwide.
 
-This is a command-line program which scrapes currency-related
-content online and display the output in the terminal.
+_______________
+
+## Objective
+
+The idea behind this app was to:
+
+- create a **command-line** program
+- do **web-scraping**
+
+_______________
 
 ## Installation
 
@@ -12,9 +20,14 @@ Requires Python 3.9.
 
 Clone this Git repository, then move to the directory and run the following install:
   
-    pip install -e /path/to/repo/
+    pip install -r requirements.txt
+
+_______________
 
 ## Usage
+
+This is a command-line program which scrapes currency-related
+content online and display the output in the terminal.
 
 ##### Currency Converter
 
@@ -32,7 +45,7 @@ _e.g._
 
     python currencychecker.py -x 150.10 USD EUR -v
     
-**N.B.** This program uses [xe.com](https://www.xe.com/) to get cuurency conversions. 
+_N.B._ This program uses [xe.com](https://www.xe.com/) to get cuurency conversions. 
 
 ##### Exchange Rate
 
@@ -48,7 +61,7 @@ _e.g._
 
     python currencychecker.py -r USD EUR -v
     
-**N.B.** This program uses [xe.com](https://www.xe.com/) for exchange rates.
+_N.B._ This program uses [xe.com](https://www.xe.com/) for exchange rates.
     
 ##### ISO 4217
 
@@ -65,14 +78,19 @@ _e.g._
     python currencychecker.py -i EUR -v
     python currencychecker.py -i 978 -v
 
-**N.B.** This program uses [currency-iso.org](https://www.currency-iso.org/) for ISO details.
+_N.B._ This program uses [currency-iso.org](https://www.currency-iso.org/) for ISO details.
+
+_______________
 
 ## Technical
 
-Third-party python modules are used in this program:
-- requests, for HTTP requests
-- beautifulsoup4, for HTML parsing
-- lxml, via beautifulsoup4 for XML parsing
+Web-scraping implemented using libraries:
+- **requests**, for HTTP requests
+- **beautifulsoup4**, for HTML parsing
+- **lxml**, (via beautifulsoup4) for XML parsing
 
-**N.B.** Requests made by this program are mostly quick. However, the target websites called in the program sometimes slow HTTP requests on purpose if too many are made. This program does mimic any browser user agent.
+_N.B._ Requests made by this program are mostly quick. 
+However, the target websites called in the program sometimes slow HTTP 
+requests down on purpose if too many are made. 
+This program does not mimic any browser user agent.
     
